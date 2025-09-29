@@ -1,10 +1,10 @@
-package com.ecommerce;
+package com.ecommerce.customer;
 
 import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CommerceServiceApplicationTests {
+public class CustomerServiceApplicationTests {
     @Disabled
     void contextLoads() {
     }

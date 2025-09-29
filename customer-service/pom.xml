@@ -95,7 +95,7 @@
                         <image>ecommerce/${project.artifactId}:${project.version}</image>
                     </to>
                     <container>
-                        <mainClass>com.ecommerce.license.LicenseServiceApplication</mainClass>
+                        <mainClass>com.ecommerce.customer.CustomerServiceApplication</mainClass>
                         <ports>
                             <port>8080</port>
                         </ports>
