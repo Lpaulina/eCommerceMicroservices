@@ -11,7 +11,7 @@ spring:
         git:
           uri: https://github.com/Lpaulina/eCommerceMicroservices.git
           default-label: phase1
-          search-paths: eCommerceMicroservices/configserver/src/main/resources/config
+          search-paths: configserver/src/main/resources/config
 
 server:
   port: 8071
