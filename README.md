@@ -4,10 +4,10 @@
 
 Before running the system, make sure you have installed:
 
-Docker
-Docker Compose
-Java 21
-Maven
+Docker  
+Docker Compose  
+Java 21  
+Maven  
 
 ## ⚙️ Deployment
 
