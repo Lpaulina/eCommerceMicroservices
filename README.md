@@ -14,6 +14,7 @@ Maven
 Clone the repository
 
 `git clone https://github.com/Lpaulina/ecommerce-microservices.git`
+
 `cd eCommerceMicroservices`
 
 Build the services 
