@@ -2,16 +2,16 @@ spring:
   application:
     name: configserver
   profiles:
-    active: git
+    active: native
   cloud:
     config:
       server:
-#          native:
-#            search-locations: classpath:/config
-        git:
-          uri: https://github.com/Lpaulina/eCommerceMicroservices.git
-          default-label: main
-          search-paths: configserver/src/main/resources/config
+          native:
+            search-locations: classpath:/config
+#        git:
+#          uri: https://github.com/Lpaulina/eCommerceMicroservices.git
+#          default-label: main
+#          search-paths: configserver/src/main/resources/config
 
 server:
   port: 8071

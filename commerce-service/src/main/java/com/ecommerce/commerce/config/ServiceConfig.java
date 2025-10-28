@@ -1,13 +1,14 @@
-package com.ecommerce.customer.config;
+package com.ecommerce.commerce.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Configuration
-@ConfigurationProperties(prefix = "customer")
+@ConfigurationProperties(prefix = "commerce")
 @Getter @Setter
-public class ServiceConfig {
+public class ServiceConfig{
     private String property;
 }

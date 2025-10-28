@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: eureka-server
+  cloud:
+    config:
+      uri: ${SPRING_CLOUD_CONFIG_URI}
+  config:
+    import: "optional:configserver:${SPRING_CLOUD_CONFIG_URI}"

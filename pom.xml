@@ -18,6 +18,7 @@
         <module>customer-service</module>
         <module>configserver</module>
         <module>commerce-service</module>
+        <module>eureka-server</module>
     </modules>
 	<properties>
 		<java.version>21</java.version>
