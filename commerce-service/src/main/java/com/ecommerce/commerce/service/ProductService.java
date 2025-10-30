@@ -26,50 +26,62 @@ public class ProductService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
+//    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
     @RateLimiter(name = "productService", fallbackMethod = "customFallbackProductService")
 	@Retry(name = "retryProductService", fallbackMethod = "customFallbackProductService")
-    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackProductService")
-    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
+    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackProductService")
     public List<Product> getProducts() {
         return productRepository.findAll();
     }
 
+//    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
     @RateLimiter(name = "productService", fallbackMethod = "customFallbackProductService")
     @Retry(name = "retryProductService", fallbackMethod = "customFallbackProductService")
-    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackProductService")
-    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
+    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackProductService")
     public Product getProduct(long id) {
         return productRepository.findById(id).get();
     }
 
+//    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
     @RateLimiter(name = "productService", fallbackMethod = "customFallbackProductService")
     @Retry(name = "retryProductService", fallbackMethod = "customFallbackProductService")
-    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackProductService")
-    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
+    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackProductService")
     public Product addProduct(Product product) {
         return productRepository.save(product);
     }
 
+//    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
     @RateLimiter(name = "productService", fallbackMethod = "customFallbackProductService")
     @Retry(name = "retryProductService", fallbackMethod = "customFallbackProductService")
-    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackProductService")
-    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
+    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackProductService")
     public Product updateProduct(Product product) {
         return productRepository.save(product);
     }
 
+//    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
     @RateLimiter(name = "productService", fallbackMethod = "customFallbackProductService")
     @Retry(name = "retryProductService", fallbackMethod = "customFallbackProductService")
-    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackProductService")
-    @CircuitBreaker(name = "productService", fallbackMethod = "customFallbackProductService")
+    @Bulkhead(name = "bulkheadProductService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackProductService")
     public void deleteProduct(long id) {
         productRepository.deleteById(id);
     }
 
     @SuppressWarnings("unused")
-    private String customFallbackProductService(Throwable t) {
-        logger.debug("Fallback triggered by: {}", t.getClass().getSimpleName());
-        return "Unable to execute action for Product";
+    private List<Product> customFallbackProductService(Throwable t) {
+        logger.warn("Fallback triggered for getProducts(): {}", t.toString());
+        return List.of(new Product());
+    }
+
+    @SuppressWarnings("unused")
+    private Product customFallbackProductService(long id, Throwable t) {
+        logger.warn("Fallback triggered for getProduct({}): {}", id, t.toString());
+        return new Product();
+    }
+
+    @SuppressWarnings("unused")
+    private Product customFallbackProductService(Product product, Throwable t) {
+        logger.error("Fallback triggered for add/updateProduct() due to:", t);
+        return product;
     }
 
 }

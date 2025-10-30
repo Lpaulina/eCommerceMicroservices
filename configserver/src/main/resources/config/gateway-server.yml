@@ -1,0 +1,54 @@
+server:
+  port: 8072
+
+logstash.host: 3.136.161.26:5000
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://eureka-server:8070/eureka/
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: commerce-service
+          uri: lb://commerce-service
+          predicates:
+            - Path=/commerce/**
+          filters:
+            - RewritePath=/commerce/(?<segment>.*), /v1/${segment}
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/customer/**
+          filters:
+            - RewritePath=/customer/(?<segment>.*), /v1/${segment}
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+    env:
+      enabled: true
+      show-values: always
+    info:
+      enabled: true
+      show-details: always
+    gateway:
+      enabled: true
+      show-details: always

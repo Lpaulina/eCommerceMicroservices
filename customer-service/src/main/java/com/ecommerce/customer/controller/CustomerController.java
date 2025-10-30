@@ -1,7 +1,6 @@
 package com.ecommerce.customer.controller;
 
 import com.ecommerce.customer.model.Customer;
-import com.ecommerce.customer.repository.CustomerRepository;
 import com.ecommerce.customer.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
