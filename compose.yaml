@@ -56,6 +56,10 @@ services:
         condition: service_healthy
       configserver:
         condition: service_started
+      keycloak:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     ports:
       - "8081:8080"
     restart: on-failure:5
@@ -75,8 +79,12 @@ services:
         condition: service_healthy
       configserver:
         condition: service_started
+      keycloak:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     ports:
-      - "8080:8080"
+      - "8082:8080"
     restart: on-failure:5
     networks:
       - backend
@@ -121,25 +129,25 @@ services:
         aliases:
           - "gateway"
 
-#  keycloak:
-#    image: quay.io/keycloak/keycloak:26.4.2
-#    restart: always
-#    environment:
-#      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-#      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-#      KC_FEATURES: token-exchange,scripts
-#    command:
-#      - start-dev
-#      - --features=scripts,token-exchange
-#      - --import-realm
-#    volumes:
-#      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
-#    ports:
-#      - "8080:8080"
-#    networks:
-#      backend:
-#        aliases:
-#          - "keycloak"
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.2
+    restart: always
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_FEATURES: token-exchange,scripts
+    command:
+      - start-dev
+      - --features=scripts,token-exchange
+      - --import-realm
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8080:8080"
+    networks:
+      backend:
+        aliases:
+          - "keycloak"
 
 networks:
   backend:

@@ -22,7 +22,7 @@ public class NotificationService {
 
     @RateLimiter(name = "notificationService", fallbackMethod = "customFallbackNotificationService")
     @Retry(name = "retryNotificationService", fallbackMethod = "customFallbackNotificationService")
-    @Bulkhead(name = "bulkheadNotificationService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackNotificationService")
+    @Bulkhead(name = "bulkheadNotificationService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackNotificationService")
     @CircuitBreaker(name = "notificationService", fallbackMethod = "customFallbackNotificationService")
     public Notification save(Notification notification) {
         notification.setSentDate(new Date());
@@ -31,15 +31,35 @@ public class NotificationService {
 
     @RateLimiter(name = "notificationService", fallbackMethod = "customFallbackNotificationService")
     @Retry(name = "retryNotificationService", fallbackMethod = "customFallbackNotificationService")
-    @Bulkhead(name = "bulkheadNotificationService", type= Bulkhead.Type.THREADPOOL, fallbackMethod = "customFallbackNotificationService")
+    @Bulkhead(name = "bulkheadNotificationService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackNotificationService")
     @CircuitBreaker(name = "notificationService", fallbackMethod = "customFallbackNotificationService")
     public Notification findById(long id) {
         return notificationRepository.findById(id).orElse(null);
     }
 
-    @SuppressWarnings("unused")
-    private String customFallbackNotificationService(Throwable t) {
-        logger.debug("Fallback triggered by: {}", t.getClass().getSimpleName());
-        return "Unable to execute action for Product";
+    public Notification customFallbackNotificationService(Notification notification, Throwable t) {
+        logger.warn("Fallback triggered for saveNotifcation(): {}", t.toString());
+
+        Notification fallback = new Notification();
+        fallback.setId(-1L);
+        fallback.setCustomerId(0L);
+        fallback.setMessage("Failed to send notification: " + notification.getMessage());
+        fallback.setSentDate(new Date());
+        fallback.setStatus("FAILED");
+
+        return fallback;
+    }
+
+    public Notification customFallbackNotificationService(long id, Throwable t) {
+        logger.warn("Fallback triggered for findNotification(): {}", t.toString());
+
+        Notification fallback = new Notification();
+        fallback.setId(id);
+        fallback.setCustomerId(0L);
+        fallback.setMessage("Notification service unavailable. Unable to retrieve notification " + id);
+        fallback.setSentDate(new Date());
+        fallback.setStatus("UNAVAILABLE");
+
+        return fallback;
     }
 }
