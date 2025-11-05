@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "customer-client")
 @Component
 @Data
-public class CommerceProperties {
+public class CustomerProperties {
     private String clientName;
 }

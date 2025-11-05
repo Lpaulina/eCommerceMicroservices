@@ -2,6 +2,7 @@ package com.ecommerce.customer.controller;
 
 import com.ecommerce.customer.model.Customer;
 import com.ecommerce.customer.service.CustomerService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+//    @RolesAllowed({ "customer-admin" })
     @GetMapping
     public ResponseEntity<List<Customer>> getCustomers()
     {
@@ -22,6 +24,7 @@ public class CustomerController {
         return ResponseEntity.ok().body(customers);
     }
 
+//    @RolesAllowed({ "customer-admin" })
     @RequestMapping(value="/{customerId}", method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomer(@PathVariable("customerId") Long customerId)
     {
@@ -42,6 +45,8 @@ public class CustomerController {
         Customer customer = customerService.updateCustomer(updatedCustomer);
         return ResponseEntity.ok().body(customer);
     }
+
+//    @RolesAllowed({ "customer-admin" })
     @DeleteMapping(value="/{customerId}")
     public ResponseEntity<String> deleteCustomer(@PathVariable("customerId") Long customerId)
     {

@@ -2,6 +2,7 @@ package com.ecommerce.customer.controller;
 
 import com.ecommerce.customer.model.Notification;
 import com.ecommerce.customer.service.NotificationService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class NotificationController {
         return ResponseEntity.ok(notification);
     }
 
+    @RolesAllowed({ "customer-admin" })
     @PostMapping
     public ResponseEntity<Notification> createNotification(@RequestBody Notification notification){
         return ResponseEntity.ok(notificationService.save(notification));
