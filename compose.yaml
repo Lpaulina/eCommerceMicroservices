@@ -12,6 +12,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
 
   customer-db:
     image: 'postgres:latest'
@@ -26,6 +28,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
 
   configserver:
     image: ecommerce/configserver:0.0.1-SNAPSHOT
@@ -34,6 +38,10 @@ services:
     environment:
       SERVER_PORT: "8089"
       ENCRYPT_KEY: "fje83Ki8403Iod87dne7Yjsl3THueh48jfuO9j4U2hf64Lo"
+    networks:
+      backend:
+        aliases:
+          - "configserver"
 
   commerce-service:
     image: ecommerce/commerce-service:0.0.1-SNAPSHOT
@@ -48,9 +56,15 @@ services:
         condition: service_healthy
       configserver:
         condition: service_started
+      keycloak:
+        condition: service_started
+      eureka-server:
+        condition: service_started
     ports:
       - "8081:8080"
     restart: on-failure:5
+    networks:
+      - backend
 
   customer-service:
     image: ecommerce/customer-service:0.0.1-SNAPSHOT
@@ -65,6 +79,76 @@ services:
         condition: service_healthy
       configserver:
         condition: service_started
+      keycloak:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8082:8080"
+    restart: on-failure:5
+    networks:
+      - backend
+
+  eureka-server:
+    image: ecommerce/eureka-server:0.0.1-SNAPSHOT
+    environment:
+      SPRING_CLOUD_CONFIG_URI: "http://configserver:8089"
+      CONFIGSERVER_PORT: "8089"
+    ports:
+      - "8070:8070"
+    depends_on:
+      commerce-db:
+        condition: service_healthy
+      customer-db:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    networks:
+      backend:
+        aliases:
+          - "eureka-server"
+
+  gateway-server:
+    image: ecommerce/gateway-server:0.0.1-SNAPSHOT
+    ports:
+      - "8072:8072"
+    environment:
+      SPRING_CLOUD_CONFIG_URI: "http://configserver:8089"
+      CONFIGSERVER_PORT: "8089"
+    depends_on:
+      commerce-db:
+        condition: service_healthy
+      customer-db:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+    networks:
+      backend:
+        aliases:
+          - "gateway"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.2
+    restart: always
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_FEATURES: token-exchange,scripts
+    command:
+      - start-dev
+      - --features=scripts,token-exchange
+      - --import-realm
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
     ports:
       - "8080:8080"
-    restart: on-failure:5
+    networks:
+      backend:
+        aliases:
+          - "keycloak"
+
+networks:
+  backend:
+    driver: bridge

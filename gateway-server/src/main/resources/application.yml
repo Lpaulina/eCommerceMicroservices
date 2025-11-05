@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: gateway-server
+  cloud:
+    config:
+      uri: ${SPRING_CLOUD_CONFIG_URI}
+  config:
+    import: "configserver:${SPRING_CLOUD_CONFIG_URI}"
+
+logging:
+  level:
+    com.netflix: WARN
+    org.springframework.web: WARN
+    com.ecommerce: DEBUG

@@ -2,6 +2,7 @@ package com.ecommerce.commerce.controller;
 
 import com.ecommerce.commerce.model.Order;
 import com.ecommerce.commerce.service.OrderService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
+//    @RolesAllowed({ "commerce-admin" })
     @DeleteMapping(value="/{orderId}")
     public ResponseEntity<String> deleteOrder(@PathVariable Long orderId) {
         orderService.deleteOrderById(orderId);
