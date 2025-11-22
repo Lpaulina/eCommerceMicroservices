@@ -1,0 +1,22 @@
+REPLACING LOGGING & REDIS SERVICES
+
+1. Kafka → Amazon MSK (Managed Streaming for Apache Kafka)
+Replaces:
+Zookeeper container
+Kafka container
+
+2. Elasticsearch + Kibana → Amazon OpenSearch Service
+Replaces:
+elasticsearch container
+kibana container
+
+3. Logstash → Amazon Kinesis + Firehose
+Kinesis Firehose
+
+4. Zipkin → AWS X-Ray (tracing)
+Replaces:
+zipkin container
+
+5. Redis → Amazon ElastiCache
+Replaces:
+redis container
