@@ -2,6 +2,7 @@ package com.ecommerce.customer.controller;
 
 import com.ecommerce.customer.model.Customer;
 import com.ecommerce.customer.service.CustomerService;
+import com.ecommerce.customer.service.KafkaProducerService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +13,18 @@ import java.util.List;
 @RestController
 @RequestMapping("v1/customers")
 public class CustomerController {
+    private final KafkaProducerService kafkaProducerService;
+
+
 
     @Autowired
     private CustomerService customerService;
 
-//    @RolesAllowed({ "customer-admin" })
+    public CustomerController(KafkaProducerService kafkaProducerService) {
+        this.kafkaProducerService = kafkaProducerService;
+    }
+
+    //    @RolesAllowed({ "customer-admin" })
     @GetMapping
     public ResponseEntity<List<Customer>> getCustomers()
     {
@@ -29,6 +37,13 @@ public class CustomerController {
     public ResponseEntity<Customer> getCustomer(@PathVariable("customerId") Long customerId)
     {
         Customer customer = customerService.getCustomerById(customerId);
+
+        if (customer == null){
+            kafkaProducerService.sendMessage("Customer with id " + customerId + " not found");
+            return ResponseEntity.notFound().build();
+        }
+
+        kafkaProducerService.sendMessage("Customer with id " + customerId + " found");
         return ResponseEntity.ok().body(customer);
     }
 

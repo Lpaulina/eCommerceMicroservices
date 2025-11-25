@@ -5,6 +5,10 @@ import com.ecommerce.commerce.model.OrderItem;
 import com.ecommerce.commerce.model.Product;
 import com.ecommerce.commerce.repository.OrderRepository;
 import com.ecommerce.commerce.repository.ProductRepository;
+import com.ecommerce.commerce.service.client.CustomerDiscoveryClient;
+import com.ecommerce.commerce.service.client.CustomerFeignClient;
+import com.ecommerce.commerce.utils.UserContextHolder;
+import com.ecommerce.commerce.model.CustomerResponse;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -14,7 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 @Service
 public class OrderService {
@@ -23,13 +29,23 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    CustomerFeignClient customerFeignClient;
+
+    @Autowired
+    CustomerDiscoveryClient customerDiscoveryClient;
+
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
-//    @CircuitBreaker(name = "orderService", fallbackMethod = "customFallbackOrderService")
+    //    @CircuitBreaker(name = "orderService", fallbackMethod = "customFallbackOrderService")
     @RateLimiter(name = "orderService", fallbackMethod = "customFallbackOrderService")
     @Retry(name = "retryOrderService", fallbackMethod = "customFallbackOrderService")
     @Bulkhead(name = "bulkheadOrderService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "customFallbackOrderService")
-    public List<Order> getAllOrdersByCustomerId(Long customerId) {
+    public List<Order> getAllOrdersByCustomerId(Long customerId, String clientType) {
+        CustomerResponse customer = retrieveCustomerInfo(customerId, clientType);
+        if (null == customer) {
+            return new ArrayList<>();
+        }
         return orderRepository.findAllByCustomerId(customerId);
     }
 
@@ -86,10 +102,50 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    private CustomerResponse retrieveCustomerInfo(Long customerId, String clientType) {
+        CustomerResponse customer = null;
+
+        switch (clientType) {
+            case "feign":
+                System.out.println("I am using the feign client");
+                customer = customerFeignClient.getCustomer(customerId);
+                break;
+            case "discovery":
+                System.out.println("I am using the discovery client");
+                customer = customerDiscoveryClient.getCustomer(customerId);
+                break;
+            default:
+                customer = customerFeignClient.getCustomer(customerId);
+                break;
+//            case "rest":
+//                System.out.println("I am using the rest client");
+//                customer = organizationRestClient.getOrganization(organizationId);
+//                break;
+        }
+
+        if (customer == null) {
+            return new CustomerResponse(
+                    customerId,
+                    "Unavailable",
+                    "unavailable@example.com",
+                    "N/A",
+                    "N/A", // password
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "00000",
+                    "N/A"
+            );
+        }
+
+        return customer;
+    }
+
+
     @SuppressWarnings("unused")
-    private List<Order> customFallbackOrderService(Long customerId, Throwable t) {
+    private List<Order> customFallbackOrderService(Long customerId, String clientType, Throwable t) {
         logger.warn("Fallback triggered for getAllOrdersByCustomerId({}): {}", customerId, t.toString());
-        return List.of();
+        return new ArrayList<>();
     }
 
     @SuppressWarnings("unused")

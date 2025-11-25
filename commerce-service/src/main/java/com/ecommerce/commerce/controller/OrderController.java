@@ -4,6 +4,7 @@ import com.ecommerce.commerce.model.Order;
 import com.ecommerce.commerce.service.OrderService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,10 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrdersByCustomerId(@RequestParam Long customerId) {
-        List<Order> orders = orderService.getAllOrdersByCustomerId(customerId);
+        List<Order> orders = orderService.getAllOrdersByCustomerId(customerId, "");
+        if (orders.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         return ResponseEntity.ok(orders);
     }
 

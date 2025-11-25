@@ -9,10 +9,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
+
 @Getter @Setter @ToString
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Customer {
+public class Customer implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

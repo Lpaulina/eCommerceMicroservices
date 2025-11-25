@@ -1,16 +1,18 @@
 package com.ecommerce.customer.service;
 
-import com.ecommerce.customer.config.ServiceConfig;
 import com.ecommerce.customer.model.Customer;
+import com.ecommerce.customer.model.CustomerListWrapper;
 import com.ecommerce.customer.repository.CustomerRepository;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -22,58 +24,71 @@ public class CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    @Autowired
-    ServiceConfig serviceConfig;
-
     private static final Logger logger = LoggerFactory.getLogger(CustomerService.class);
 
-    // @CircuitBreaker(name = "customerService", fallbackMethod = "getAllFallbackCustomerService")
+    // Full list cache
     @RateLimiter(name = "customerService", fallbackMethod = "getAllFallbackCustomerService")
     @Retry(name = "retryCustomerService", fallbackMethod = "getAllFallbackCustomerService")
-    @Bulkhead(name = "bulkheadCustomerService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "getAllFallbackCustomerService")
+    @Bulkhead(name = "bulkheadCustomerService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "getAllFallbackCustomerService")
+    @Cacheable(value = "customersAll", key = "'all'")
     public List<Customer> getAllCustomers() {
+        logger.info("DB HIT: fetching customers from database");
         return customerRepository.findAll();
     }
 
-//  @CircuitBreaker(name = "customerService", fallbackMethod = "getFallbackCustomerService")
+    // Single customer cache
     @RateLimiter(name = "customerService", fallbackMethod = "getFallbackCustomerService")
     @Retry(name = "retryCustomerService", fallbackMethod = "getFallbackCustomerService")
-    @Bulkhead(name = "bulkheadCustomerService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "getFallbackCustomerService")
+    @Bulkhead(name = "bulkheadCustomerService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "getFallbackCustomerService")
+    @Cacheable(value = "customersById", key = "#id")
     public Customer getCustomerById(long id) {
-        return customerRepository.getReferenceById(id);
+        return customerRepository.findById(id).orElse(null);
     }
-//    # @CircuitBreaker(name = "customerService", fallbackMethod = "createFallbackCustomerService")
+
+    // Create customer: update individual cache, evict full list cache
     @RateLimiter(name = "customerService", fallbackMethod = "createFallbackCustomerService")
     @Retry(name = "retryCustomerService", fallbackMethod = "createFallbackCustomerService")
-    @Bulkhead(name = "bulkheadCustomerService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "createFallbackCustomerService")
+    @Bulkhead(name = "bulkheadCustomerService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "createFallbackCustomerService")
+    @Caching(
+            put = @CachePut(value = "customersById", key = "#customer.id"),
+            evict = @CacheEvict(value = "customersAll", key = "'all'")
+    )
     public Customer createCustomer(Customer customer) {
         return customerRepository.save(customer);
     }
 
-//    @CircuitBreaker(name = "customerService", fallbackMethod = "updateFallbackCustomerService")
+    // Update customer: update individual cache, evict full list cache
     @RateLimiter(name = "customerService", fallbackMethod = "updateFallbackCustomerService")
     @Retry(name = "retryCustomerService", fallbackMethod = "updateFallbackCustomerService")
-    @Bulkhead(name = "bulkheadCustomerService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "updateFallbackCustomerService")
+    @Bulkhead(name = "bulkheadCustomerService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "updateFallbackCustomerService")
+    @Caching(
+            put = @CachePut(value = "customersById", key = "#customer.id"),
+            evict = @CacheEvict(value = "customersAll", key = "'all'")
+    )
     public Customer updateCustomer(Customer customer) {
         return customerRepository.save(customer);
     }
 
-//    @CircuitBreaker(name = "customerService", fallbackMethod = "deleteFallbackCustomerService")
+    // Delete customer: evict both individual and full list caches
     @RateLimiter(name = "customerService", fallbackMethod = "deleteFallbackCustomerService")
     @Retry(name = "retryCustomerService", fallbackMethod = "deleteFallbackCustomerService")
-    @Bulkhead(name = "bulkheadCustomerService", type= Bulkhead.Type.SEMAPHORE, fallbackMethod = "deleteFallbackCustomerService")
+    @Bulkhead(name = "bulkheadCustomerService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "deleteFallbackCustomerService")
+    @Caching(evict = {
+            @CacheEvict(value = "customersById", key = "#id"),
+            @CacheEvict(value = "customersAll", key = "'all'")
+    })
     public void deleteCustomer(long id) {
         customerRepository.deleteById(id);
     }
+
+    // Fallbacks
     public List<Customer> getAllFallbackCustomerService(Throwable t) {
         logger.warn("Fallback triggered for getAllCustomers(): {}", t.toString());
-
         return Collections.emptyList();
     }
 
     public Customer getFallbackCustomerService(long id, Throwable t) {
-        logger.warn("Fallback triggered for getCustomerById(" + id +"): {}", t.toString());
-
+        logger.warn("Fallback triggered for getCustomerById({}): {}", id, t.toString());
         Customer fallbackCustomer = new Customer();
         fallbackCustomer.setId(id);
         fallbackCustomer.setName("Unavailable");
@@ -89,31 +104,18 @@ public class CustomerService {
 
     public Customer createFallbackCustomerService(Customer customer, Throwable t) {
         logger.warn("Fallback triggered for createCustomer(): {}", t.toString());
-
-        Customer fallback = new Customer();
-        fallback.setName(customer.getName());
-        fallback.setEmail(customer.getEmail());
-        fallback.setPhoneNumber(customer.getPhoneNumber());
-        fallback.setStreet(customer.getStreet());
-        fallback.setCity(customer.getCity());
-        fallback.setState(customer.getState());
-        fallback.setZip(customer.getZip());
-        fallback.setCountry(customer.getCountry());
-        fallback.setId(-1L); // indicate failure
-        return fallback;
+        customer.setId(-1L);
+        return customer;
     }
 
     public Customer updateFallbackCustomerService(Customer customer, Throwable t) {
         logger.warn("Fallback triggered for updateCustomer(): {}", t.toString());
-        Customer fallback = new Customer();
-        fallback.setId(customer.getId());
-        fallback.setName(customer.getName() + " (update failed)");
-        fallback.setEmail(customer.getEmail());
-        return fallback;
+        customer.setName(customer.getName() + " (update failed)");
+        return customer;
     }
 
     public void deleteFallbackCustomerService(long id, Throwable t) {
-        logger.warn("Fallback triggered for deleteCustomer(" + id + "): {}", t.toString());
+        logger.warn("Fallback triggered for deleteCustomer({}): {}", id, t.toString());
     }
 
 }
