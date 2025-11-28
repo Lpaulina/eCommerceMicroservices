@@ -8,6 +8,6 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "customer", groupId = "commerce-service")
     public void consume(String message) {
-        System.out.println("Message received: " + message);
+        System.out.println("SENT customer event: " + message);
     }
 }

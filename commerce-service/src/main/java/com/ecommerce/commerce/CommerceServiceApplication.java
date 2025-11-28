@@ -18,9 +18,4 @@ public class CommerceServiceApplication {
         SpringApplication.run(CommerceServiceApplication.class, args);
     }
 
-    @LoadBalanced
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }

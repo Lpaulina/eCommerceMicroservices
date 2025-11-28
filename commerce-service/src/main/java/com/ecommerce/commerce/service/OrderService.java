@@ -7,6 +7,7 @@ import com.ecommerce.commerce.repository.OrderRepository;
 import com.ecommerce.commerce.repository.ProductRepository;
 import com.ecommerce.commerce.service.client.CustomerDiscoveryClient;
 import com.ecommerce.commerce.service.client.CustomerFeignClient;
+import com.ecommerce.commerce.service.client.CustomerRestClient;
 import com.ecommerce.commerce.utils.UserContextHolder;
 import com.ecommerce.commerce.model.CustomerResponse;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
@@ -34,6 +35,9 @@ public class OrderService {
 
     @Autowired
     CustomerDiscoveryClient customerDiscoveryClient;
+
+    @Autowired
+    CustomerRestClient customerRestClient;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
@@ -114,13 +118,13 @@ public class OrderService {
                 System.out.println("I am using the discovery client");
                 customer = customerDiscoveryClient.getCustomer(customerId);
                 break;
-            default:
-                customer = customerFeignClient.getCustomer(customerId);
+            case "rest":
+                System.out.println("I am using the rest client");
+                customer = customerRestClient.getCustomer(customerId);
                 break;
-//            case "rest":
-//                System.out.println("I am using the rest client");
-//                customer = organizationRestClient.getOrganization(organizationId);
-//                break;
+            default:
+                customer = customerRestClient.getCustomer(customerId);
+                break;
         }
 
         if (customer == null) {

@@ -18,18 +18,21 @@ public class CustomerDiscoveryClient {
     @Autowired
     private DiscoveryClient discoveryClient;
 
+    @Autowired
+    private RestTemplate restTemplate; // use the tracing-aware bean
+
     public CustomerResponse getCustomer(Long customerId) {
-        RestTemplate restTemplate = new RestTemplate();
         List<ServiceInstance> instances = discoveryClient.getInstances("customer-service");
 
         if (instances.isEmpty()) return null;
-        String serviceUri = String.format("%s/v1/customers/%s",instances.getFirst().getUri().toString(), customerId);
+        String serviceUri = String.format("%s/v1/customers/%s", instances.get(0).getUri(), customerId);
 
-        ResponseEntity< CustomerResponse > restExchange =
+        ResponseEntity<CustomerResponse> restExchange =
                 restTemplate.exchange(
                         serviceUri,
                         HttpMethod.GET,
-                        null, CustomerResponse.class, customerId);
+                        null,  // headers automatically propagated
+                        CustomerResponse.class);
 
         return restExchange.getBody();
     }

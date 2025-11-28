@@ -1,7 +1,6 @@
 package com.ecommerce.customer.service;
 
 import com.ecommerce.customer.model.Customer;
-import com.ecommerce.customer.model.CustomerListWrapper;
 import com.ecommerce.customer.repository.CustomerRepository;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;

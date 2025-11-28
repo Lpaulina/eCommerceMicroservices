@@ -1,80 +1,45 @@
 package com.ecommerce.gatewayserver.filters;
 
-//import org.apache.commons.codec.binary.Base64;
-//import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-
 import reactor.core.publisher.Mono;
 
-@Order(1)
+import java.util.UUID;
+
 @Component
+@Order(1)
 public class TrackingFilter implements GlobalFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(TrackingFilter.class);
-
-    @Autowired
-    FilterUtils filterUtils;
+    public static final String CORRELATION_ID = "tmx-correlation-id";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
-        if (isCorrelationIdPresent(requestHeaders)) {
-            logger.debug("tmx-correlation-id found in tracking filter: {}. ",
-                    filterUtils.getCorrelationId(requestHeaders));
+
+        HttpHeaders headers = exchange.getRequest().getHeaders();
+        String correlationId;
+
+        if (headers.containsKey(CORRELATION_ID)) {
+            correlationId = headers.getFirst(CORRELATION_ID);
         } else {
-            String correlationID = generateCorrelationId();
-            exchange = filterUtils.setCorrelationId(exchange, correlationID);
-            logger.debug("tmx-correlation-id generated in tracking filter: {}.", correlationID);
+            correlationId = UUID.randomUUID().toString();
         }
 
-//        System.out.println("The authentication name from the token is : " + getUsername(requestHeaders));
+        // Put it in MDC for logging
+        MDC.put(CORRELATION_ID, correlationId);
 
-        return chain.filter(exchange);
+        // Add it to request headers for downstream
+        exchange = exchange.mutate()
+                .request(exchange.getRequest().mutate()
+                        .header(CORRELATION_ID, correlationId)
+                        .build())
+                .build();
+
+        return chain.filter(exchange)
+                .doFinally(signal -> MDC.remove(CORRELATION_ID)); // clean up MDC
     }
-
-
-    private boolean isCorrelationIdPresent(HttpHeaders requestHeaders) {
-        if (filterUtils.getCorrelationId(requestHeaders) != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private String generateCorrelationId() {
-        return java.util.UUID.randomUUID().toString();
-    }
-
-/*
-    private String getUsername(HttpHeaders requestHeaders){
-        String username = "";
-        if (filterUtils.getAuthToken(requestHeaders)!=null){
-            String authToken = filterUtils.getAuthToken(requestHeaders).replace("Bearer ","");
-            JSONObject jsonObj = decodeJWT(authToken);
-            try {
-                username = jsonObj.getString("preferred_username");
-            }catch(Exception e) {logger.debug(e.getMessage());}
-        }
-        return username;
-    }
-
-
-    private JSONObject decodeJWT(String JWTToken) {
-        String[] split_string = JWTToken.split("\\.");
-        String base64EncodedBody = split_string[1];
-        Base64 base64Url = new Base64(true);
-        String body = new String(base64Url.decode(base64EncodedBody));
-        JSONObject jsonObj = new JSONObject(body);
-        return jsonObj;
-    }
-*/
-
 }

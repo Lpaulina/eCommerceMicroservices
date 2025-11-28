@@ -39,11 +39,11 @@ public class CustomerController {
         Customer customer = customerService.getCustomerById(customerId);
 
         if (customer == null){
-            kafkaProducerService.sendMessage("Customer with id " + customerId + " not found");
+            kafkaProducerService.sendMessage("RECEIVED GET EVENT: Customer with id " + customerId + " not found");
             return ResponseEntity.notFound().build();
         }
 
-        kafkaProducerService.sendMessage("Customer with id " + customerId + " found");
+        kafkaProducerService.sendMessage("RECEIVED GET EVENT: Customer with id " + customerId + " found");
         return ResponseEntity.ok().body(customer);
     }
 
