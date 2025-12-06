@@ -24,7 +24,7 @@ Start the system
 
 `docker-compose up -d`
 
-## KeyCloak
+## Keycloak
 Go to http://localhost:8080/admin/master/console/#/ecommerce
 Log in with username: admin, password: admin
 Create a user
@@ -39,3 +39,4 @@ and therefore were not merged into the main branch
 
 However, this branch also demonstrates the utilization of tools like logstash
 kibana, redis, etc, so feel free to pull down branch `phase3` to see their configuration
+
