@@ -20,3 +20,139 @@ zipkin container
 5. Redis → Amazon ElastiCache
 Replaces:
 redis container
+
+SETTING PERMISSIONS FOR PEM KEY:
+icacls .\elk-service.pem /inheritance:r
+
+ADD PROJECT:
+scp -r -i .\elk-service.pem C:\Users\pauli\OneDrive\Documents\GitHub\eCommerceMicroservices ec2-user@3.236.125.229:~/
+
+TO SSH IN:
+ssh -i .\elk-service.pem ec2-user@3.236.125.229
+
+sudo curl -SL \
+"https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64" \
+-o /usr/local/bin/docker-compose
+
+sudo docker-compose up -d
+
+TO CREATE CLUSTER
+Make sure you're logged in: aws sso login --profile paulina
+eksctl create cluster --name=ecommerce-dev-cluster --nodes=1 --node-type=m4.large --profile paulina
+
+CLUSTER NAME:
+eksctl-ecommerce-dev-cluster-cluster
+
+AWS PROFILE:
+aws sts get-caller-identity --profile paulina
+
+
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:861276091195:repository/ecommerce/configserver",
+        "registryId": "861276091195",
+        "repositoryName": "ecommerce/configserver",
+        "repositoryUri": "861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/configserver",
+        "createdAt": "2025-12-02T20:48:09.396000-07:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+
+PS C:\Users\pauli> aws ecr create-repository --repository-name ecommerce/commerce-service --profile paulina
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:861276091195:repository/ecommerce/commerce-service",
+        "registryId": "861276091195",
+        "repositoryName": "ecommerce/commerce-service",
+        "repositoryUri": "861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/commerce-service",
+        "createdAt": "2025-12-02T20:48:35.883000-07:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+
+PS C:\Users\pauli> aws ecr create-repository --repository-name ecommerce/eureka-server --profile paulina
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:861276091195:repository/ecommerce/eureka-server",
+        "registryId": "861276091195",
+        "repositoryName": "ecommerce/eureka-server",
+        "repositoryUri": "861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/eureka-server",
+        "createdAt": "2025-12-02T20:48:52.137000-07:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+
+PS C:\Users\pauli> aws ecr create-repository --repository-name ecommerce/gateway-server --profile paulina
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:861276091195:repository/ecommerce/gateway-server",
+        "registryId": "861276091195",
+        "repositoryName": "ecommerce/gateway-server",
+        "repositoryUri": "861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/gateway-server",
+        "createdAt": "2025-12-02T20:49:09.866000-07:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+
+PS C:\Users\pauli> aws ecr create-repository --repository-name ecommerce/customer-service --profile paulina
+{
+    "repository": {
+        "repositoryArn": "arn:aws:ecr:us-east-1:861276091195:repository/ecommerce/customer-service",
+        "registryId": "861276091195",
+        "repositoryName": "ecommerce/customer-service",
+        "repositoryUri": "861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/customer-service",
+        "createdAt": "2025-12-02T20:49:32.993000-07:00",
+        "imageTagMutability": "MUTABLE",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "encryptionConfiguration": {
+            "encryptionType": "AES256"
+        }
+    }
+}
+TO SET UP ZOOKEEPER AND KAFKA:
+ https://medium.com/@nirnayj/self-managed-kafka-cluster-on-aws-ec2-with-zookeeper-and-multi-broker-setup-ab7346d7e91f
+
+ aws ec2 describe-security-groups --filters Name=group-name,Values="*eksctl-ecommerce-dev-cluster*"  --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" --profile paulina
+  aws ec2 authorize-security-group-ingress --protocol tcp --port 31000 --group-id sg-0d36d13a4e6012624 --cidr 0.0.0.0/0 --profile paulina
+
+
+  psql -h customer-db.c6hs2eye02n0.us-east-1.rds.amazonaws.com \
+       -U consumer \
+       -d postgres \
+       -p 5432
+
+   psql -h commerce-db.c6hs2eye02n0.us-east-1.rds.amazonaws.com \
+        -U commerce \
+        -d postgres \
+        -p 5432
+
+  TO FORWARD A PORT:
+   kubectl port-forward svc/configserver 8089:8089
+
+ kubectl expose deployment gateway-server --type=LoadBalancer --name=gateway-server-lb --port=8072 --target-port=807

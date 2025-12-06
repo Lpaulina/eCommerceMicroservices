@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\pauli\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: configserver
+  name: configserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: configserver
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\pauli\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: configserver
+    spec:
+      containers:
+        - env:
+            - name: ENCRYPT_KEY
+              value: fje83Ki8403Iod87dne7Yjsl3THueh48jfuO9j4U2hf64Lo
+            - name: SERVER_PORT
+              value: "8089"
+          image: 861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/configserver:latest
+          name: configserver
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8089
+              protocol: TCP
+      restartPolicy: Always

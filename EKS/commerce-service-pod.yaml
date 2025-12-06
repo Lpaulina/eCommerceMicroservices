@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\pauli\AppData\Local\Microsoft\WinGet\Packages\Kubernetes.kompose_Microsoft.Winget.Source_8wekyb3d8bbwe\kompose.exe convert
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: commerce-service
+  name: commerce-service
+spec:
+  containers:
+    - env:
+        - name: CONFIGSERVER_PORT
+          value: "8089"
+        - name: DATABASESERVER_PORT
+          value: "5432"
+        - name: ENCRYPT_KEY
+          value: IMSYMMETRIC
+        - name: SPRING_CLOUD_CONFIG_URI
+          value: http://configserver:8089
+        - name: SPRING_PROFILES_ACTIVE
+          value: dev
+      image: 861276091195.dkr.ecr.us-east-1.amazonaws.com/ecommerce/commerce-service
+      name: commerce-service
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+  restartPolicy: OnFailure

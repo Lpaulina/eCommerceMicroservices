@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: commerce-db-service
+  name: commerce-db-service
+spec:
+  externalName: commerce-db.c6hs2eye02n0.us-east-1.rds.amazonaws.com
+  selector:
+    app: commerce-db-service
+  type: ExternalName
+status:
+  loadBalancer: {}

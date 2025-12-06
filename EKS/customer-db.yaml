@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: customer-db-service
+  name: customer-db-service
+spec:
+  externalName: customer-db.c6hs2eye02n0.us-east-1.rds.amazonaws.com
+  selector:
+    app: customer-db-service
+  type: ExternalName
+status:
+  loadBalancer: {}

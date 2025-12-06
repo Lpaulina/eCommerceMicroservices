@@ -40,7 +40,7 @@ management:
 
   zipkin:
     tracing:
-      endpoint: http://zipkin:9411/api/v2/spans
+      endpoint: http://3.238.94.27:9411/api/v2/spans
   endpoints:
     web:
       exposure:

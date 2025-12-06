@@ -31,7 +31,7 @@ public class CustomerRestClient {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<CustomerResponse> response = restTemplate.exchange(
-                "http://customer-service:8080/v1/customers/" + id,
+                "http://customer-service:8082/v1/customers/" + id,
                 HttpMethod.GET,
                 entity,
                 CustomerResponse.class
